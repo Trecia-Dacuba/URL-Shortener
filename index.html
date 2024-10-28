@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <title>URL Shortener</title>
+	// Copyright (c) 2024 Trecia Dacuba
+	// This code is licensed under the MIT License. You may use, modify, and distribute it as long as you include this notice.
+	// For any inquiries regarding the copyright, please contact treciamae.dacuba@gmail.com.
+	// This code is provided "as is", without warranty of any kind. The author is not liable for any damages arising from the use of this code.
+	
+    <meta name="description" content="ShortURL is a tool to shorten a long link and create a short URL easy to share on sites, chat, and emails. Track short URL traffic and manage your links.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+   <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #403234;
+            color: #333;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            flex-direction: column;
+        }
+
+		h1 {
+            text-align: center;
+            color: #ffab91;
+            font-size: 2.5em;
+			border: solid 3px;
+			max-width: 1200px;
+			width: 440px;
+			padding: 10px;
+            border-radius: 20px;
+			box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        h3 {
+            text-align: center;
+            color: #ffab91;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        input {
+            display: block;
+            margin: 15px auto;
+            width: 300px;
+            padding: 10px;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+        }
+		
+		input:focus {
+            outline: none;
+            border-color: #ffab91; 
+            box-shadow: 0px 4px 15px rgba(255, 171, 145, 0.4);
+			}
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 15px;
+            width: 300px;
+            margin: 0 auto;
+        }
+
+        button {
+            color: #333;
+            border: none;
+            padding: 12px;
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            flex: 1;
+            margin: 0 5px;
+        }
+
+        button:hover {
+            background-color: #81d4fa;
+            transform: translateY(-3px);
+            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.2); 
+        }
+
+        button[type="submit"] {
+            background-color: #b2ebf2;
+        }
+
+        button[type="button"] {
+            background-color: #ffcc80;
+        }
+
+        .container {
+            background: #eceff1;
+            max-width: 400px;
+			width: 400px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .output-container {
+            background: #eceff1;
+            max-width: 400px;
+            margin: 20px auto;
+            padding: 15px;
+            border-radius: 20px;
+            box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            text-align: center;
+        }
+
+        .output-container h2 {
+            color: #ffab91;
+            margin-bottom: 15px;
+			font-size: 18px;
+        }
+
+        /* Animation for hover effects */
+        @keyframes buttonHover {
+            0% {
+                background-color: #ffcc80;
+                transform: translateY(0);
+                box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+            }
+            50% {
+                background-color: #ffb74d;
+                transform: translateY(-5px);
+                box-shadow: 0px 12px 20px rgba(0, 0, 0, 0.3);
+            }
+            100% {
+                background-color: #ffcc80;
+                transform: translateY(0);
+                box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        button:hover {
+			background-color: #80deea; 
+			transform: translateY(-3px);
+        }
+
+        /* Hide PyScript buttons */
+        #shortenButtonPy, #clearButtonPy {
+            display: none;
+        }
+    </style>
+    <script>
+        // Simulate storage for shortened URLs and click counts
+        const urlDatabase = {};
+
+        function isValidURL(url) {
+            const pattern = /^(https?:\/\/)?(www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(\/[^\s]*)?$/; // Basic URL regex pattern
+            return pattern.test(url);
+        }
+
+        function shortenURL(event) {
+            event.preventDefault(); // Prevent the default form submission
+
+            const urlInput = document.getElementById("urlInput").value;
+
+            // Validate the input URL
+            if (!isValidURL(urlInput)) {
+                displayError("Please enter a valid URL.");
+                return; // Stop the function if the URL is invalid
+            }
+
+            const shortCode = Math.random().toString(36).substring(2, 8); // Generate random string
+            const shortURL = "short.ly/" + shortCode; 
+
+            // Store the original URL and initialize click count
+            urlDatabase[shortCode] = { originalURL: urlInput, clickCount: 0 };
+
+            // Display the result
+            const resultSection = document.getElementById("result");
+            resultSection.innerHTML = `
+                <h2>Shortened URL:</h2>
+                <p><a href="#" onclick="trackClick('${shortCode}')" target="_blank">${shortURL}</a></p>
+                <p>Click count: <span id="clickCount-${shortCode}">0</span></p>`;
+            resultSection.style.display = 'block'; // Show the result section
+
+            clearError(); // Clear any previous error messages
+			}
+
+			function displayError(message) {
+				const errorSection = document.createElement("div");
+				errorSection.className = "error-message";
+				errorSection.innerText = message;
+				const container = document.querySelector('.container');
+				container.appendChild(errorSection);
+			}
+
+			function clearError() {
+				const errorMessages = document.querySelectorAll(".error-message");
+				errorMessages.forEach((msg) => msg.remove());
+			}
+
+			function trackClick(shortCode) {
+				// Update click count
+				urlDatabase[shortCode].clickCount += 1;
+
+				// Redirect to the original URL
+				const originalURL = urlDatabase[shortCode].originalURL;
+				window.open(originalURL, "_blank");
+
+				// Update the displayed click count
+				document.getElementById(`clickCount-${shortCode}`).textContent = urlDatabase[shortCode].clickCount;
+			}
+
+			function clearForm() {
+				document.getElementById("urlInput").value = ""; // Clear input field
+				document.getElementById("result").style.display = 'none'; // Hide result section
+				clearError(); // Clear any error messages
+			}
+    </script>
+</head>
+
+<body>
+	<h1>URL Shortener</h1>
+	
+    <div class="container">
+        <h3>Mini Link</h3>
+		<p>Mini Link is a free tool to shorten URLs and generate short links.</p>
+        <form onsubmit="shortenURL(event)">
+            <input type="text" id="urlInput" placeholder="Enter URL to Shorten:" required>
+            <div id="result" class="output-container"></div> <!-- Result section -->
+            <div class="button-container">
+                <button type="submit">Shorten URL</button>
+                <button type="button" onclick="clearForm()">Clear</button> <!-- Clear button -->
+            </div>
+        </form>
+    </div>
+
+    <!-- PyScript block for background functionality -->
+    <py-script>
+        from js import document
+
+        def shorten_url_py(event):
+            event.preventDefault()  # Prevent form submission
+            url_input = document.getElementById("urlInput").value
+            
+            # Simulate URL shortening with a random short URL
+            short_url_py = "pyshort.ly/" + "".join(__import__('random').choices("abcdefghijklmnopqrstuvwxyz0123456789", k=6))
+            
+            # Do not show the PyScript output on the webpage, just run the code in the background
+            console.log(f"Python shortened URL: {short_url_py}")  # Log the URL instead of showing it
+
+        def clear_form_py(event):
+            document.getElementById("urlInput").value = ""  # Clear input field
+
+        # Bind buttons for PyScript without affecting the output
+        document.getElementById("shortenButtonPy").addEventListener("click", shorten_url_py)
+        document.getElementById("clearButtonPy").addEventListener("click", clear_form_py)
+    </py-script>
+
+    <!-- Hidden PyScript buttons below the container -->
+    <div class="button-container">
+        <button type="button" id="shortenButtonPy">Shorten URL (PyScript)</button>
+        <button type="button" id="clearButtonPy">Clear (PyScript)</button>
+    </div>
+</body>
+</html>
